@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google vyhledávání</title>
+    <style>
+        #searchingForm {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        form {
+            width: 30%;
+            text-align: center;
+            border: 1px solid black;
+            border-radius: 8px;
+            padding: 8px 0 10px 0;
+        }
+
+        #searchedResults {
+            text-align: center;
+            border: 1px solid black;
+            border-radius: 8px;
+            margin-top: 10px;
+            display:none;
+            padding: 0px 10px 0 10px;
+        }
+    
+        #downloadResultsButton {
+            margin-top: 10px;
+            display:none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="searchingForm">
+        
+        <form id="form">
+            <div>
+                <label for="keyword">Please, insert a keyword you want search.</label> <br>
+                <input type="text" placeholder="Let´s search" id="keyword" name="keyword">
+                <input type="submit" value="Search">
+            </div>
+        </form>
+        
+        <div id="searchedResults"></div>
+        
+        <button id="downloadResultsButton">Download results</button>
+        
+    </div>
+    
+    <script>
+        document.getElementById("form").addEventListener("submit", function(event){
+            var inputKeyword = document.getElementById("keyword").value;
+            event.preventDefault();
+            SearchGoogle(inputKeyword);
+            GetInputKeyword = function()
+            {
+                return inputKeyword;
+            };
+        })
+
+        function SearchGoogle(inputKeyword) {
+            var apiKey = "YOUR_API_KEY";
+            var cx = "YOUR_SEARCH_ENGINE_ID";
+            var url = "https://www.googleapis.com/customsearch/v1?q=" + encodeURIComponent(inputKeyword) + "&cx=" + cx + "&key=" + apiKey +"&num = 15";
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.send();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    DisplayResults(response.items);
+                    DisplayDownloadButton();
+                }
+            };
+            
+        }
+
+        function DisplayResults(results) {
+            var output = "";
+
+            results.forEach(function(result) {
+                output += "<p><a href='" + result.link + "'>" + result.title + "</a></p>";
+            });
+
+            document.getElementById("searchedResults").innerHTML = output;
+
+            if (document.getElementById("searchedResults").style.display != "block"){
+                document.getElementById("searchedResults").style.display = "block";
+            }
+        }
+        
+        function DisplayDownloadButton() {
+            var btn = document.getElementById("downloadResultsButton")
+            if (btn.style.display != "block"){
+                btn.style.display = "block";
+            }  
+        }
+
+        document.getElementById("downloadResultsButton").addEventListener("click", function() {
+            var links = document.getElementById("searchedResults").innerText;
+            DownloadResults(links);
+        });
+
+        function DownloadResults(links) {
+            var resultsAsBinaryFile = new Blob([links], { type: "text/plain" });
+            var url = window.URL.createObjectURL(resultsAsBinaryFile);
+            var results = document.createElement("a");
+        
+            results.href = url;
+            results.download = GetInputKeyword();
+            results.click();
+            
+            window.URL.revokeObjectURL(url);
+            
+        }
+        
+    </script>
+
+</body>
+</html>
